@@ -1,0 +1,66 @@
+name: pms2_ott
+description: Premium OTT Video Streaming App with S3, Supabase & TMDB Integration
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  
+  # UI
+  cupertino_icons: ^1.0.6
+  google_fonts: ^6.1.0
+  flutter_svg: ^2.0.9
+  
+  # Video Player - media_kit for Windows/Linux/macOS support
+  media_kit: ^1.1.11
+  media_kit_video: ^1.2.5
+  media_kit_libs_video: ^1.0.5
+  
+  # Backend - Supabase
+  supabase_flutter: ^2.3.0
+  
+  # HTTP & API
+  dio: ^5.4.0
+  
+  # State Management
+  provider: ^6.1.1
+  
+  # Offline Storage
+  hive: ^2.2.3
+  hive_flutter: ^1.1.0
+  path_provider: ^2.1.2
+  
+  # Caching
+  cached_network_image: ^3.3.1
+  flutter_cache_manager: ^3.3.1
+  
+  # UI Components
+  shimmer: ^3.0.0
+  card_swiper: ^3.0.1
+  smooth_page_indicator: ^1.1.0
+  
+  # Environment Variables
+  flutter_dotenv: ^5.1.0
+  
+  # Utilities
+  intl: ^0.19.0
+  connectivity_plus: ^5.0.2
+  uuid: ^4.3.3
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.1
+  hive_generator: ^2.0.1
+  build_runner: ^2.4.8
+
+flutter:
+  uses-material-design: true
+  
+  assets:
+    - .env
+    - assets/images/
