@@ -1,0 +1,36 @@
+name: iOS IPA (Sideload)
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  build-ios:
+    name: Build iOS IPA
+    runs-on: macos-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - uses: subosito/flutter-action@v2
+      with:
+        channel: 'stable'
+
+    - name: Get dependencies
+      run: flutter pub get
+      
+    - name: Build iOS (No Codesign)
+      run: flutter build ios --release --no-codesign
+
+    - name: Create IPA Payload
+      run: |
+        mkdir -p Payload
+        mv build/ios/iphoneos/Runner.app Payload/
+        zip -r pms2_ott.ipa Payload
+
+    - name: Upload IPA
+      uses: actions/upload-artifact@v4
+      with:
+        name: pms2-ott-ios-sideload
+        path: pms2_ott.ipa
