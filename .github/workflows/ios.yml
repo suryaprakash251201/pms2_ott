@@ -26,8 +26,11 @@ jobs:
     - name: Create IPA Payload
       run: |
         mkdir -p Payload
-        mv build/ios/iphoneos/Runner.app Payload/
-        zip -r pms2_ott.ipa Payload
+        cp -R build/ios/iphoneos/Runner.app Payload/
+        # Remove code signature that causes ldid issues
+        rm -rf Payload/Runner.app/_CodeSignature
+        # Create IPA with proper structure
+        zip -r -q pms2_ott.ipa Payload
 
     - name: Upload IPA
       uses: actions/upload-artifact@v4
