@@ -416,19 +416,15 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
         s3VideoUrl: s3Url,
       );
 
-      if (movie != null) {
-        if (mounted) {
-          Navigator.pop(context);
-          widget.onMovieAdded?.call();
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Movie "${movie.title}" added successfully!'),
-              backgroundColor: AppColors.success,
-            ),
-          );
-        }
-      } else {
-        throw Exception('Failed to add movie');
+      if (mounted) {
+        Navigator.pop(context);
+        widget.onMovieAdded?.call();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Movie "${movie.title}" added successfully!'),
+            backgroundColor: AppColors.success,
+          ),
+        );
       }
     } catch (e) {
       if (mounted) {

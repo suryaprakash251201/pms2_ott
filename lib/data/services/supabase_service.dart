@@ -72,7 +72,7 @@ class SupabaseService {
   }
 
   /// Add a new movie with TMDB data
-  Future<Movie?> addMovie({
+  Future<Movie> addMovie({
     required int tmdbId,
     required String s3VideoUrl,
     int? duration,
@@ -81,7 +81,7 @@ class SupabaseService {
       // Fetch TMDB data
       final tmdbData = await _tmdbService.getMovieDetails(tmdbId);
       if (tmdbData == null) {
-        throw Exception('Failed to fetch TMDB data');
+        throw Exception('Failed to fetch TMDB data for ID: $tmdbId');
       }
 
       // Extract genres
@@ -110,7 +110,7 @@ class SupabaseService {
       return Movie.fromJson(response);
     } catch (e) {
       print('Error adding movie: $e');
-      return null;
+      rethrow;
     }
   }
 
