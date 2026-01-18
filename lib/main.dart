@@ -19,19 +19,36 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // Initialize MediaKit for video playback (Windows, Linux, macOS)
-  MediaKit.ensureInitialized();
+  try {
+    MediaKit.ensureInitialized();
+  } catch (e) {
+    debugPrint('MediaKit initialization error: $e');
+  }
 
   // Set preferred orientations
-  await SystemChrome.setPreferredOrientations([
-    DeviceOrientation.portraitUp,
-    DeviceOrientation.portraitDown,
-  ]);
+  try {
+    await SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+      DeviceOrientation.portraitDown,
+    ]);
+  } catch (e) {
+    debugPrint('Orientation error: $e');
+  }
 
   // Load environment variables
-  await dotenv.load(fileName: '.env');
+  try {
+    await dotenv.load(fileName: '.env');
+  } catch (e) {
+    debugPrint('Error loading .env file: $e');
+    // Continue without .env - app will use defaults
+  }
 
   // Initialize offline storage
-  await OfflineService.initialize();
+  try {
+    await OfflineService.initialize();
+  } catch (e) {
+    debugPrint('Offline service error: $e');
+  }
 
   // Initialize Supabase
   try {
