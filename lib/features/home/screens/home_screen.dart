@@ -48,20 +48,29 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.backgroundDark,
-      body: Consumer<HomeProvider>(
-        builder: (context, provider, child) {
-          if (provider.isLoading) {
-            return _buildLoading();
-          }
+      body: Container(
+        color: AppColors.backgroundDark,
+        child: Consumer<HomeProvider>(
+          builder: (context, provider, child) {
+            debugPrint('HomeScreen: isLoading=${provider.isLoading}, movies=${provider.movies.length}, error=${provider.error}');
+            
+            if (provider.isLoading) {
+              return _buildLoading();
+            }
 
-          if (provider.error != null && provider.movies.isEmpty) {
-            return AppErrorWidget(
-              message: provider.error!,
-              onRetry: () => provider.refresh(),
-            );
-          }
+            if (provider.error != null && provider.movies.isEmpty) {
+              return AppErrorWidget(
+                message: provider.error!,
+                onRetry: () => provider.refresh(),
+              );
+            }
 
-          return RefreshIndicator(
+            // Handle empty state when no movies and no error
+            if (provider.movies.isEmpty) {
+              return _buildEmptyState(provider);
+            }
+
+            return RefreshIndicator(
             onRefresh: () => provider.refresh(),
             color: AppColors.primary,
             child: CustomScrollView(
@@ -155,22 +164,73 @@ class _HomeScreenState extends State<HomeScreen> {
               ],
             ),
           );
-        },
+          },
+        ),
       ),
     );
   }
 
   Widget _buildLoading() {
-    return SingleChildScrollView(
-      child: Column(
-        children: const [
-          SizedBox(height: 60),
-          FeaturedShimmer(),
-          SizedBox(height: 24),
-          CategoryShimmer(),
-          SizedBox(height: 24),
-          CategoryShimmer(),
-        ],
+    return Container(
+      color: AppColors.backgroundDark,
+      child: SingleChildScrollView(
+        child: Column(
+          children: const [
+            SizedBox(height: 60),
+            FeaturedShimmer(),
+            SizedBox(height: 24),
+            CategoryShimmer(),
+            SizedBox(height: 24),
+            CategoryShimmer(),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEmptyState(HomeProvider provider) {
+    return Container(
+      color: AppColors.backgroundDark,
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.movie_outlined,
+              size: 80,
+              color: AppColors.textSecondaryDark,
+            ),
+            const SizedBox(height: 24),
+            Text(
+              'No Movies Available',
+              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                    color: AppColors.textPrimaryDark,
+                  ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'Add some movies from the Admin app\nor check your connection',
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                    color: AppColors.textSecondaryDark,
+                  ),
+            ),
+            const SizedBox(height: 32),
+            ElevatedButton.icon(
+              onPressed: () => provider.refresh(),
+              icon: const Icon(Icons.refresh),
+              label: const Text('Refresh'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 32,
+                  vertical: 16,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
