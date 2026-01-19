@@ -8,9 +8,9 @@ class AppColors {
   static const Color primaryDark = Color(0xFFB20710);
 
   // Background Colors (Dark Theme)
-  static const Color backgroundDark = Color(0xFF141414);
-  static const Color surfaceDark = Color(0xFF1F1F1F);
-  static const Color cardDark = Color(0xFF2A2A2A);
+  static const Color backgroundDark = Color(0xFF0F1014); // Hotstar Deep Blue/Black
+  static const Color surfaceDark = Color(0xFF15161C);
+  static const Color cardDark = Color(0xFF1E1F28);
 
   // Background Colors (Light Theme)
   static const Color backgroundLight = Color(0xFFF5F5F5);

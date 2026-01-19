@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import '../../../data/models/models.dart';
 import '../../../data/services/services.dart';
+import 'dart:async'; // Added for Timer
 
 /// Provider for home screen state management
 class HomeProvider extends ChangeNotifier {
@@ -28,51 +29,124 @@ class HomeProvider extends ChangeNotifier {
     _error = null;
     notifyListeners();
 
+    // STRATEGY: Instant Load
+    // 1. Try to load from cache immediately
+    debugPrint('HomeProvider: Attempting instant load from cache...');
     try {
-      debugPrint('HomeProvider: Fetching movies from Supabase...');
-      
-      // Load movies from Supabase
-      _movies = await _supabaseService.getMovies();
-      
-      debugPrint('HomeProvider: Fetched ${_movies.length} movies');
-
-      // If no movies from server, try offline cache
-      if (_movies.isEmpty) {
-        debugPrint('HomeProvider: No movies from server, trying cache...');
-        _movies = _offlineService.getCachedMovies();
-        debugPrint('HomeProvider: Got ${_movies.length} movies from cache');
-      } else {
-        // Cache movies for offline use
-        await _offlineService.cacheMovies(_movies);
-      }
-
-      // Set featured movies (first 5)
-      _featuredMovies = _movies.take(5).toList();
-      debugPrint('HomeProvider: Featured movies: ${_featuredMovies.map((m) => m.title).toList()}');
-
-      // Categorize movies by genre
-      _categorizeMovies();
-
-      // Load continue watching if user is logged in
-      if (userId != null) {
-        _continueWatching = await _supabaseService.getContinueWatching(userId);
-      }
-
-      _isLoading = false;
-      _error = null;
-    } catch (e, stackTrace) {
-      debugPrint('HomeProvider: Error loading movies: $e');
-      debugPrint('HomeProvider: Stack trace: $stackTrace');
-      _error = 'Failed to load movies: $e';
-      _isLoading = false;
-
-      // Try to load from cache on error
       _movies = _offlineService.getCachedMovies();
-      _featuredMovies = _movies.take(5).toList();
-      _categorizeMovies();
+    } catch (e) {
+      debugPrint('HomeProvider: Cache error: $e');
     }
 
-    notifyListeners();
+    // 2. If cache empty, use DUMMY DATA immediately so UI shows something
+    if (_movies.isEmpty) {
+      debugPrint('HomeProvider: Cache empty, using DUMMY DATA for instant load');
+      _movies = _generateDummyMovies();
+    }
+
+    // 3. Process the initial data (cache or dummy)
+    if (_movies.isNotEmpty) {
+      _featuredMovies = _movies.take(5).toList();
+      _categorizeMovies();
+      // Important: Stop loading state HERE because we have data to show
+      _isLoading = false; 
+      notifyListeners(); 
+    }
+
+    // 4. Fetch fresh data from network in BACKGROUND
+    // We don't await this blocking the UI, but we do await it to update state eventually
+    debugPrint('HomeProvider: Starting background network fetch...');
+    
+    try {
+      // Use a safety timeout for the network call
+      final freshMovies = await _supabaseService.getMovies().timeout(
+        const Duration(seconds: 10),
+        onTimeout: () {
+          debugPrint('HomeProvider: Background fetch timed out');
+          return []; // Return empty to indicate failure/timeout
+        },
+      );
+      
+      if (freshMovies.isNotEmpty) {
+        debugPrint('HomeProvider: Background fetch successful (${freshMovies.length} movies)');
+        _movies = freshMovies;
+        
+        // Cache the fresh data
+        await _offlineService.cacheMovies(_movies);
+        
+        // Update UI with fresh data
+        _featuredMovies = _movies.take(5).toList();
+        _categorizeMovies();
+        
+        // Ensure loading is false (if it wasn't already)
+        _isLoading = false;
+        _error = null;
+        notifyListeners();
+      } else {
+         debugPrint('HomeProvider: Background fetch returned empty or timed out. Keeping existing data.');
+      }
+      
+      // Load continue watching
+      if (userId != null) {
+        try {
+           final watching = await _supabaseService.getContinueWatching(userId);
+           if (watching.isNotEmpty) {
+             _continueWatching = watching;
+             notifyListeners();
+           }
+        } catch (e) {
+           debugPrint('HomeProvider: Failed to load continue watching: $e');
+        }
+      }
+
+    } catch (e) {
+      debugPrint('HomeProvider: Background fetch error: $e');
+      // No need to show error since we have data shown
+    }
+    
+    // Final safety check: if we are still loading for some reason, stop it
+    if (_isLoading) {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  void _handleError(String message) {
+     if (!_isLoading) return; // Already handled
+
+     _error = message;
+     _isLoading = false;
+     
+     // Try to load from cache
+     _movies = _offlineService.getCachedMovies();
+
+     // If cache empty, use DUMMY DATA
+     if (_movies.isEmpty) {
+        _movies = _generateDummyMovies();
+     }
+
+     _featuredMovies = _movies.take(5).toList();
+     _categorizeMovies();
+     
+     notifyListeners();
+  }
+
+  List<Movie> _generateDummyMovies() {
+    return List.generate(10, (index) {
+      return Movie(
+        id: 'dummy_$index',
+        tmdbId: 123 + index,
+        title: 'Demo Movie ${index + 1}',
+        description: 'This is a demo movie description to show the UI when the backend is unreachable.',
+        posterUrl: 'https://placehold.co/500x750/1a1a1a/ffffff.png?text=Movie+${index+1}',
+        backdropUrl: 'https://placehold.co/1280x720/1a1a1a/ffffff.png?text=Backdrop+${index+1}',
+        s3VideoUrl: 'https://www.w3schools.com/html/mov_bbb.mp4', // Safe sample video
+        duration: 7200,
+        releaseDate: DateTime.now(), // Use DateTime instead of String
+        rating: 8.5,
+        genres: ['Action', 'Drama', if (index % 2 == 0) 'Sci-Fi'],
+      );
+    });
   }
 
   /// Categorize movies by genre

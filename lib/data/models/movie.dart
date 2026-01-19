@@ -1,4 +1,5 @@
 import 'package:hive/hive.dart';
+import 'actor.dart';
 
 part 'movie.g.dart';
 
@@ -41,6 +42,15 @@ class Movie extends HiveObject {
   @HiveField(11)
   final DateTime? createdAt;
 
+  @HiveField(12)
+  final List<Actor> cast;
+
+  @HiveField(13)
+  final List<Actor> crew;
+
+  @HiveField(14)
+  final List<Movie> similar;
+
   Movie({
     required this.id,
     required this.tmdbId,
@@ -54,6 +64,9 @@ class Movie extends HiveObject {
     this.rating,
     this.genres = const [],
     this.createdAt,
+    this.cast = const [],
+    this.crew = const [],
+    this.similar = const [],
   });
 
   /// Create Movie from Supabase JSON response
@@ -77,6 +90,9 @@ class Movie extends HiveObject {
       createdAt: json['created_at'] != null
           ? DateTime.tryParse(json['created_at'] as String)
           : null,
+      cast: [], // TODO: Parse from JSON if available or fetch separately
+      crew: [],
+      similar: [],
     );
   }
 
@@ -142,6 +158,9 @@ class Movie extends HiveObject {
       rating: rating ?? this.rating,
       genres: genres ?? this.genres,
       createdAt: createdAt ?? this.createdAt,
+      cast: cast ?? this.cast,
+      crew: crew ?? this.crew,
+      similar: similar ?? this.similar,
     );
   }
 

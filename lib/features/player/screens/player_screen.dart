@@ -44,9 +44,19 @@ class _PlayerScreenState extends State<PlayerScreen> {
 
   Future<void> _initializePlayer() async {
     try {
-      // Create player instance
-      _player = Player();
+      // Create player instance with configuration for faster startup
+      _player = Player(
+        configuration: const PlayerConfiguration(
+          // Buffer settings for faster start
+          bufferSize: 32 * 1024 * 1024, // 32MB buffer
+        ),
+      );
       _controller = VideoController(_player);
+
+      // Show UI immediately - don't wait for video to fully load
+      if (mounted) {
+        setState(() => _isInitialized = true);
+      }
 
       // Listen for errors
       _player.stream.error.listen((error) {
@@ -57,15 +67,22 @@ class _PlayerScreenState extends State<PlayerScreen> {
       });
 
       // Open the video
-      await _player.open(Media(widget.movie.s3VideoUrl));
+      final videoUrl = widget.movie.s3VideoUrl;
+      debugPrint('PlayerScreen: Opening video URL: $videoUrl');
+      
+      if (videoUrl.isEmpty) {
+        throw Exception('Video URL is empty');
+      }
+      
+      // Open and play immediately - don't await sequentially 
+      await _player.open(
+        Media(videoUrl),
+        play: true, // Start playing immediately on open
+      );
 
-      // Seek to start position if provided
+      // Seek to start position if provided (after playback starts)
       if (widget.startPosition != null && widget.startPosition! > 0) {
         await _player.seek(Duration(seconds: widget.startPosition!));
-      }
-
-      if (mounted) {
-        setState(() => _isInitialized = true);
       }
     } catch (e) {
       debugPrint('Player init error: $e');

@@ -27,6 +27,7 @@ class _MainShellState extends State<MainShell> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppColors.backgroundDark,
       body: IndexedStack(
         index: _currentIndex,
         children: _screens,

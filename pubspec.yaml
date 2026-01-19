@@ -19,6 +19,7 @@ dependencies:
   media_kit: ^1.1.11
   media_kit_video: ^1.2.5
   media_kit_libs_video: ^1.0.5
+  media_kit_libs_windows_video: ^1.0.9  # Required for Windows video playback
   
   # Backend - Supabase
   supabase_flutter: ^2.3.0
@@ -57,6 +58,15 @@ dev_dependencies:
   flutter_lints: ^3.0.1
   hive_generator: ^2.0.1
   build_runner: ^2.4.8
+  flutter_launcher_icons: ^0.13.1
+
+flutter_icons:
+  android: true
+  ios: true
+  image_path: "assets/images/logo.png"
+  windows:
+    generate: true
+    icon_size: 48
 
 flutter:
   uses-material-design: true
